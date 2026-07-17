@@ -66,6 +66,7 @@ export const verify = async (req, res) => {
 
     try {
         const authHeader = req.headers.authorization;
+        // console.log("authHeader", authHeader);
 
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
             return res.status(400).json({
@@ -116,7 +117,8 @@ export const verify = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: "User Verified Successfully"
+            message: "User Verified Successfully",
+            user
         })
     } catch (error) {
         return res.status(500).json({
@@ -389,7 +391,7 @@ export const getUserById = async (req, res) => {
 
     try {
         const { userId } = req.params;
-        const user = await User.findById({ userId }).select("-password -otp -otpExpiry -token")
+        const user = await User.findById(userId).select("-password -otp -otpExpiry -token")
 
         if (!user) {
             return res.status(404).json({
@@ -420,9 +422,9 @@ export const updateUser = async (req, res) => {
         console.log('userIdToUpdate', userIdToUpdate);
 
         const loggedInUser = req.user // from auth middleware 
-        console.log("REQ body",req.body);
-        
-        const { firstName, lastName, email, address, zipCode, city, phoneNumber } = req.body
+        console.log("REQ body", req.body);
+
+        const { firstName, lastName, email, address, zipCode, city, phoneNumber, role } = req.body
 
         // console.log("loggenInUser id = ", loggedInUser._id.toString());
 
@@ -458,28 +460,35 @@ export const updateUser = async (req, res) => {
                     )
                     .end(req.file.buffer);
             });
-            console.log("Upload Result = ", uploadResult);
+            // console.log("Upload Result = ", uploadResult);
 
-             profilePic = uploadResult.secure_url
-             profilePicPublicId = uploadResult.public_id
+            profilePic = uploadResult.secure_url
+            profilePicPublicId = uploadResult.public_id
+
+
+
+
+
         }
-        user.firstName = firstName || user.firstName
-        user.lastName = lastName || user.lastName
-        user.email = email || user.email
-        user.phoneNumber = phoneNumber || user.phoneNumber
-        user.address = address || user.address
-        user.city = city || user.city
-        user.zipCode = zipCode || user.zipCode
-        user.profilePic = profilePic
-        user.profilePicPublicId = profilePicPublicId
-        const updatedUser = await user.save()
 
+        if (firstName !== undefined) user.firstName = firstName;
+        if (lastName !== undefined) user.lastName = lastName;
+        if (email !== undefined) user.email = email;
+        if (phoneNumber !== undefined) user.phoneNumber = phoneNumber;
+        if (address !== undefined) user.address = address;
+        if (city !== undefined) user.city = city;
+        if (zipCode !== undefined) user.zipCode = zipCode;
+        if (profilePic !== undefined) user.profilePic = profilePic;
+        if (profilePicPublicId !== undefined) user.profilePicPublicId = profilePicPublicId;
+        if (role !== undefined) user.role = role;
+
+
+        const updatedUser = await user.save();
         return res.status(200).json({
             success: true,
             message: "Profile Updated Successfully",
             user: updatedUser
         });
-
     } catch (error) {
         return res.status(500).json({
             success: false,

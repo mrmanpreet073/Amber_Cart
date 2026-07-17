@@ -1,39 +1,71 @@
 import React from "react";
 import { ShoppingCart } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "sonner";
+import { setCart } from '@/Redux/productSice.js';
+
 
 const Card = ({ product, isLoading }) => {
+
+    const accessToken = localStorage.getItem('accessToken')
+
+    const dispatch = useDispatch()
+    const navigate = useNavigate()
+
+    const addToCart = async (productId) => {
+
+        try {
+            const res = await axios.post(`http://localhost:3000/api/cart/add`, { productId }, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            })
+            // console.log("response", res);
+
+            if (res.data.success) {
+                // console.log("cart data", res.data.cart);
+                toast.success("Product Added")
+
+                dispatch(setCart(res.data.cart))
+            }
+        } catch (error) {
+            console.log(error);
+
+        }
+
+    }
     return (
-        <div className="bg-white w-full max-w-[220px] rounded-2xl shadow-sm border border-stone-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
-
-
-
-
+        <div className="bg-white  w-50 max-w-[250px] rounded shadow-sm border border-stone-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
 
             {/* Aspect Ratio Balanced Image Box */}
-            <div className="w-full h-40 overflow-hidden bg-stone-50 relative shrink-0">
+            <div className="w-full h-30 overflow-hidden bg-stone-50 relative shrink-0 m-auto">
                 {isLoading ? <Skeleton className="aspect-video w-full" />
                     : <img
+                    onClick={()=>(navigate(`/product/${product?._id}`))}
                         src={product.productImg?.[0]?.url || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=400"}
                         alt={product.productName}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-fill group-hover:scale-105 transition-transform duration-500 "
                     />}
             </div>
 
             {/* Product Details Wrapper */}
-            <div className="p-3 flex flex-col flex-1 justify-between gap-2 bg-white">
-                <div>
+            <div className="p-3 flex flex-col flex-1 justify-between gap-4 bg-white">
+                <div onClick={()=>(navigate(`/product/${product?._id}`))} className="mx-1 my-2">
                     <h2 className="text-xs md:text-sm font-semibold text-stone-800 line-clamp-2 min-h-[36px] leading-tight">
                         {product.productName}
                     </h2>
 
-                    <p className="text-base font-extrabold text-amber-700 mt-1">
+                    <p className="text-base text-sm font-extrabold text-amber-700 mt-1">
                         ₹{product.productPrice?.toLocaleString('en-IN')}
                     </p>
                 </div>
 
                 <button
-                    className="w-full bg-stone-900 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl flex items-center justify-center gap-1.5 text-xs tracking-wide transition-colors shadow-sm cursor-pointer"
+                    onClick={() => addToCart(product._id)}
+                    className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded flex items-center justify-center gap-1.5 text-sm tracking-wide transition-colors shadow-sm cursor-pointer"
                 >
                     <ShoppingCart size={14} />
                     Add to Cart

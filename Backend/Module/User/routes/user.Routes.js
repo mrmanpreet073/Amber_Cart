@@ -1,5 +1,6 @@
 import {Router} from 'express'
 import * as controller from '../controller/userController.js'
+import * as controllerAddress from '../controller/userAddress.controller.js'
 import { authenticate, isAdmin } from '../Middleware/authenticate.js'
 import { singleUpload } from '../../../Common/Middleware/multer.js'
 
@@ -15,6 +16,11 @@ router.post("/verifyOtp/:email",controller.verifyOtp)
 router.post("/allUsers",authenticate,isAdmin,controller.allUsers)
 router.post("/getUserById/:userId",authenticate,controller.getUserById)
 router.post("/updateProfile/:id",authenticate,singleUpload,controller.updateUser)
+
+// 
+router.get("/getAddress/:userId",controllerAddress.getAddress)
+router.post("/addAddress/:userId",controllerAddress.addAddress)
+router.post("/updateAddress/:addressId",controllerAddress.updateAddress)
 
 export default router
 

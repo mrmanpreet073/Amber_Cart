@@ -4,6 +4,7 @@ import connectDb from "./Common/Configuration/db.js"
 import UserRouter from "./Module/User/routes/user.Routes.js";
 import cors from "cors"
 import productRouter from "./Module/Product/Routes/product.routes.js";
+import cartRouter from "./Module/Product/Routes/cart.routes.js";
 
 
 const app = express();
@@ -25,6 +26,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/user",UserRouter)
 app.use("/api/product",productRouter)
+app.use("/api/cart",cartRouter)
 
 
 async function main() {

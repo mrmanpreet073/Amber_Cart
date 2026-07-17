@@ -8,9 +8,10 @@
 //     },
 // });
 
-import { configureStore } from '@reduxjs/toolkit';
+import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
 import userReducer from './userSlice.js';
+import productReducer from './productSice.js';
 
 const storage = {
   getItem: (key) => Promise.resolve(localStorage.getItem(key)),
@@ -18,19 +19,23 @@ const storage = {
   removeItem: (key) => Promise.resolve(localStorage.removeItem(key)),
 };
 
+const rootReducer = combineReducers({
+    user: userReducer,
+    product: productReducer,
+});
+
 const persistConfig = {
   key: 'Amber',
   storage,
-  whitelist: ['user'],  // only persist these slices
+  whitelist: ['user','product'],  // only persist these slices
   // blacklist: ['cart'] // or exclude these slices
 };
 
-const persistedReducer = persistReducer(persistConfig, userReducer);
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
 
 export const store = configureStore({
-  reducer: {
-    user: persistedReducer,
-  },
+  reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: false }), // required for redux-persist
 });

@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { setUser } from '@/Redux/userSlice.js';
+import { store } from '@/Redux/store';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false); // Mobile drawer state
@@ -13,12 +14,18 @@ export default function Navbar() {
   const [lastScrollY, setLastScrollY] = useState(0);
   const dropdownRef = useRef(null);
   const navigate = useNavigate()
-  const { user } = useSelector((store) => (store.user))
+  const { user } = useSelector((store) => store.user)
   const dispatch = useDispatch()
+  const { cart } = useSelector((state) => state.product);
 
 
 
   const isLogin = !!user;
+
+  const role = user?.role === "admin" ? true : false
+  // console.log("user ", user);
+  // console.log("use role", role);
+
 
   // Close desktop profile dropdown when clicking outside of it
   useEffect(() => {
@@ -30,6 +37,8 @@ export default function Navbar() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+ 
 
   // Monitor scroll behavior to hide/show the secondary navbar smoothly
   useEffect(() => {
@@ -70,6 +79,7 @@ export default function Navbar() {
 
         dispatch(setUser(null))
         localStorage.removeItem('accessToken');
+        // console.log(store.getState());
         toast(response.data.message)
       }
     } catch (error) {
@@ -96,7 +106,7 @@ export default function Navbar() {
           </div>
 
           {/* Desktop Brand Logo */}
-          <div className="hidden md:flex items-center gap-2 select-none cursor-pointer">
+          <div className="hidden md:flex items-center gap-2 select-none cursor-pointer" onClick={() => navigate("/")}>
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-600 shadow-sm shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-4.5 w-4.5 text-white">
                 <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
@@ -123,10 +133,15 @@ export default function Navbar() {
 
           {/* Action Cart & Avatar Profile Segment */}
           <div className="flex items-center gap-1 sm:gap-4 shrink-0 relative" ref={dropdownRef}>
-            <button className="p-2 text-stone-500 hover:text-stone-700 transition-colors relative cursor-pointer">
-              <ShoppingBag className="h-5 w-5" />
+            <button onClick={() => navigate("/cart")}
+              className="p-2 text-stone-500 hover:text-stone-700 transition-colors relative cursor-pointer">
+              <ShoppingBag
+              size={26}
+
+                 />
               <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-amber-600 text-[10px] font-bold text-white flex items-center justify-center scale-90">
-                2
+                {cart?.items?.length}
+
               </span>
             </button>
 
@@ -136,8 +151,8 @@ export default function Navbar() {
               className="hidden md:flex rounded-full border border-stone-200 overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500"
             >
               <img
-                className="h-8 w-8 object-cover"
-                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                className="h-11 w-11 object-cover"
+                src={user?.profilePic}
                 alt="User profile"
               />
             </button>
@@ -147,10 +162,10 @@ export default function Navbar() {
               <div className="hidden md:block absolute right-0 top-12 w-50 bg-white border border-stone-200 rounded-xl shadow-lg py-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-100">
                 <div className="px-4 py-2 border-b border-stone-100">
                   <p className="text-xs text-stone-400 font-medium">Signed in as</p>
-                  <p className="text-sm font-semibold text-stone-700 truncate">user@domain.com</p>
+                  <p className="text-sm font-semibold text-stone-700 truncate">{user?.email?.toLowerCase()}</p>
                 </div>
                 {/* <a href="#" className="flex items-center gap-2 px-4 py-2 text-sm text-stone-600 hover:bg-orange-100"><User className="h-4 w-4" /> My Profile</a> */}
-                <button onClick={() => (navigate(`/profile/${user._id}`))} className="flex items-center gap-2 px-4 py-2 text-sm text-stone-600 w-full hover:bg-orange-100"><User className="h-4 w-4" /> My Profile</button>
+                <button onClick={() => (navigate(`/profile/${user?._id}`))} className="flex items-center gap-2 px-4 py-2 text-sm text-stone-600 w-full hover:bg-orange-100"><User className="h-4 w-4" /> My Profile</button>
                 <button onClick={() => (navigate("/setting"))} className="flex items-center gap-2 px-4 py-2 text-sm text-stone-600 w-full hover:bg-orange-100"><Settings className="h-4 w-4" /> Settings</button>
                 {/* <a href="#" className="flex items-center gap-2 px-4 py-2 text-sm text-stone-600 hover:bg-orange-100"><Settings className="h-4 w-4" /> Settings</a> */}
                 <hr className="border-t border-stone-100 my-1" />
@@ -184,10 +199,17 @@ export default function Navbar() {
           }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center gap-2   ">
-          <a href="#" className="px-3 py-1.5 text-sm font-semibold text-stone-800 bg-stone-100/80 rounded-lg transition-colors">Home</a>
-          <button onClick={()=>(navigate("/products"))} className="px-3 py-1.5 text-sm font-medium text-stone-600 hover:text-stone-900 rounded-lg transition-colors">Products</button>
+          <button className="px-3 py-1.5 text-sm font-semibold text-stone-800 bg-stone-100/80 rounded-lg transition-colors cursor-pointer" onClick={() => navigate("/")}>Home</button>
+          <button onClick={() => (navigate("/products"))} className="px-3 py-1.5 text-sm font-medium text-stone-600 hover:text-stone-900 rounded-lg transition-colors">Products</button>
+          <button onClick={() => (navigate("/contactUs"))} className="px-3 py-1.5 text-sm font-medium text-stone-600 hover:text-stone-900 rounded-lg transition-colors">Contact Us</button>
+           { role && (
+            <button onClick={() => (navigate("/dashboard/sales"))} className="px-3 py-1.5 text-sm font-medium text-amber-600 hover:text-stone-900 rounded-lg transition-colors">Dashboard</button>
+          )}
           {/* <a href="#" className="px-3 py-1.5 text-sm font-medium text-stone-600 hover:text-stone-900 rounded-lg transition-colors">Projects</a> */}
-          <a href="#" className="px-3 py-1.5 text-sm font-medium text-stone-600 hover:text-stone-900 rounded-lg transition-colors">Contact Us</a>
+          {/* <a href="#" className="px-3 py-1.5 text-sm font-medium text-stone-600 hover:text-stone-900 rounded-lg transition-colors">Contact Us</a> */}
+        </div>
+        <div>
+        
         </div>
       </div>
 
@@ -200,7 +222,7 @@ export default function Navbar() {
             <button onClick={() => navigate(`/profile/${user._id}`)} className="block px-3 py-2.5 text-base font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 rounded-lg"> Profile</button>
             <UserCircle2Icon className='text-orange-700' />
           </div>
-          <button onClick={()=>(navigate("/products"))} className="px-3 py-1.5 text-sm font-medium text-stone-600 hover:text-stone-900 rounded-lg transition-colors">Products</button>
+          <button onClick={() => (navigate("/products"))} className="px-3 py-1.5 text-sm font-medium text-stone-600 hover:text-stone-900 rounded-lg transition-colors">Products</button>
           <a href="#" className="block px-3 py-2.5 text-base font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 rounded-lg">Contact Us</a>
 
           {/* Placement 2: Mobile Logout Button integrated clean at the bottom */}
